@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "djoser",
     "ecommerce",
     "main",
-    "auth2",
+    "user",
 ]
 
 MIDDLEWARE = [
