@@ -5,6 +5,9 @@ from main.serializers.product import CategorySerializer
 from utils.helpers import custom_response, parse_request
 from main.models.product import Product
 from main.serializers.product import ProductSerializer
+from rest_framework.response import Response
+from main.services.product import ProductService
+from rest_framework import status
 
 
 class CategoryAPIView(views.APIView):
@@ -47,10 +50,46 @@ def post(self, request):
 class ProductViewAPI(views.APIView):
     def get(self, request):
         try:
-            products = Product.objects.all()
-            serializers = ProductSerializer(products, many=True)
-            return custom_response(
-                "Get all products successfully!", "Success", serializers.data, 200
-            )
-        except:
-            return custom_response("Get all products failed!", "Error", None, 400)
+            query_params = {
+                "page": request.GET.get("page", 1),
+                "limit": request.GET.get("limit", 20),
+            }
+
+            paginate = ProductService.paginate_and_query_product(request, query_params)
+            if paginate is not None:
+                serializer = ProductSerializer(paginate.object_list, many=True)
+                products_data = serializer.data
+
+                response_data = {
+                    "message": "Lấy sản phẩm thành công",
+                    "data": {
+                        "products": products_data,
+                        "pagination": {
+                            "page": paginate.number,
+                            "page_size": paginate.paginator.num_pages,
+                            "limit": paginate.paginator.per_page,
+                        },
+                    },
+                }
+                return Response(response_data, status=200)
+            else:
+                return Response("Không có sản phẩm nào phù hợp", status=404)
+        except Exception as e:
+            print(e)
+            return Response("Lấy thành công", status=500)
+
+
+class ProductDetailViewAPI(views.APIView):
+    def get(self, request, product_id):
+        try:
+            product = ProductService.get_product_by_id(product_id)
+            if product is not None:
+                serializer = ProductSerializer(product)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            else:
+                return Response(
+                    "Không tìm thấy sản phẩm", status=status.HTTP_404_NOT_FOUND
+                )
+        except Exception as e:
+            print(e)
+            return Response("Lỗi server", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
