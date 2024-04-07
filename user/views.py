@@ -6,6 +6,10 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import ValidationError
 from user.serializers import LoginSerializer
 from django.contrib.auth import logout
+from rest_framework.permissions import IsAuthenticated
+from user.models import User
+from rest_framework import status
+from user.serializers import UserSerializer
 
 
 class RegisterView(views.APIView):
@@ -93,4 +97,27 @@ class LogoutView(views.APIView):
             return Response({"message": "Đăng xuất thành công!"}, status=200)
         except Exception as e:
             print(e)
+            return Response({"message": "Internal Server Error"}, status=500)
+
+
+class UserView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            user_id = request.user.id
+
+            user = User.objects.get(id=user_id)
+
+            serializer = UserSerializer(user).data
+
+            return Response(
+                data={
+                    "message": "Lấy người dùng thành công",
+                    "data": serializer,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        except Exception as e:
             return Response({"message": "Internal Server Error"}, status=500)

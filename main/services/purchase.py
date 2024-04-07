@@ -46,23 +46,6 @@ class PurchaseService:
         return purchases
 
     @staticmethod
-    def buy_product(purchase_ids):
-        print(purchase_ids)
-        purchases = Purchase.objects.filter(id__in=purchase_ids).select_related(
-            "product"
-        )
-
-        if not purchases.exists():
-            # Handle case where no purchases are found
-            raise ValueError("No purchases found for the provided IDs")
-
-        for purchase in purchases:
-            purchase.status = 1
-            purchase.save()
-
-        return purchases
-
-    @staticmethod
     def update_purchase(product_id, body_update, purchase_id):
         try:
             if product_id:
