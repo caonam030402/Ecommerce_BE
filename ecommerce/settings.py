@@ -115,7 +115,8 @@ DJOSER = {
     "SEND_ACTIVATION_EMAIL": False,
 }
 
-# AUTH_USER_MODEL = "user.UserAccount"
+AUTH_USER_MODEL = "user.User"
+
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (

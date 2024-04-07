@@ -2,8 +2,6 @@ from rest_framework import views
 from rest_framework.response import Response
 from main.models.product import Category
 from main.serializers.product import CategorySerializer
-from utils.helpers import custom_response, parse_request
-from main.models.product import Product
 from main.serializers.product import ProductSerializer
 from rest_framework.response import Response
 from main.services.product import ProductService
@@ -32,19 +30,20 @@ class CategoryAPIView(views.APIView):
                 status=400,
             )
 
-
-def post(self, request):
-    data = parse_request(request)
-    serializer = CategorySerializer(data=data)
-    if serializer.is_valid():
-        serializer.save()
-        return custom_response(
-            "Create category successfully!", "Success", serializer.data, 201
-        )
-    else:
-        return custom_response(
-            "Create category failed", "Error", serializer.errors, 400
-        )
+    def post(self, request):
+        try:
+            serializer = CategorySerializer(data=request.data, many=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(e)
+            return Response(
+                "Thêm sản phẩm thất bại",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ProductViewAPI(views.APIView):
@@ -76,7 +75,22 @@ class ProductViewAPI(views.APIView):
                 return Response("Không có sản phẩm nào phù hợp", status=404)
         except Exception as e:
             print(e)
-            return Response("Lấy thành công", status=500)
+            return Response("Lấy thất bại", status=500)
+
+    def post(self, request):
+        try:
+            serializer = ProductSerializer(data=request.data, many=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(e)
+            return Response(
+                "Thêm sản phẩm thất bại",
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ProductDetailViewAPI(views.APIView):
@@ -85,7 +99,12 @@ class ProductDetailViewAPI(views.APIView):
             product = ProductService.get_product_by_id(product_id)
             if product is not None:
                 serializer = ProductSerializer(product)
-                return Response(serializer.data, status=status.HTTP_200_OK)
+
+                dataProduct = {
+                    "message": "Lấy sản phẩm thành công",
+                    "data": serializer.data,
+                }
+                return Response(dataProduct, status=status.HTTP_200_OK)
             else:
                 return Response(
                     "Không tìm thấy sản phẩm", status=status.HTTP_404_NOT_FOUND
