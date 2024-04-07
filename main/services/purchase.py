@@ -47,9 +47,14 @@ class PurchaseService:
 
     @staticmethod
     def buy_product(purchase_ids):
+        print(purchase_ids)
         purchases = Purchase.objects.filter(id__in=purchase_ids).select_related(
             "product"
         )
+
+        if not purchases.exists():
+            # Handle case where no purchases are found
+            raise ValueError("No purchases found for the provided IDs")
 
         for purchase in purchases:
             purchase.status = 1
@@ -67,6 +72,11 @@ class PurchaseService:
             else:
                 raise ValueError("Thiếu thông tin cần thiết")
 
-            purchases.update(**body_update)
-        except ObjectDoesNotExist:
-            raise ValueError("Purchase không tồn tại hoặc không thể cập nhật")
+            if purchases.exists():
+                purchases.update(**body_update)
+                return purchases
+            else:
+                raise ObjectDoesNotExist("Không tìm thấy bản ghi phù hợp")
+        except Exception as e:
+            print(f"Error updating purchase: {e}")
+            return None

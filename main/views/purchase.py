@@ -7,6 +7,8 @@ from rest_framework import views
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from main.serializers.purchase import PurchaseSerializer
+from main.models.promotion import Promotion
+from django.http import JsonResponse
 
 
 class PurchaseAPIView(views.APIView):
@@ -33,7 +35,6 @@ class PurchaseAPIView(views.APIView):
         )
 
     def get(self, request):
-
         status = request.GET.get("status")
 
         if status is None:
@@ -65,12 +66,29 @@ class PurchaseAPIView(views.APIView):
             status=status.HTTP_200_OK,
         )
 
-    @csrf_exempt
     def put(self, request):
-        purchases_body = request.data.getlist("purchases[]")
-        purchase_ids = [purchase.get("purchase_id") for purchase in purchases_body]
-        purchases = PurchaseService.buy_product(purchase_ids)
-        return Response("Mua thành công", data=purchases, status=status.HTTP_200_OK)
+        try:
+            purchase_ids = [
+                purchase_data["purchase_id"] for purchase_data in request.data
+            ]
+            purchases = Purchase.objects.filter(pk__in=purchase_ids)
+
+            for purchase in purchases:
+                purchase.status = 1
+                purchase.save()
+
+            serializer = PurchaseSerializer(purchase)
+            serialized_purchase = serializer.data
+
+            return Response(
+                data={
+                    "message": "Mua thành công",
+                    "data": serialized_purchase,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
     @csrf_exempt
     def patch(self, request):
