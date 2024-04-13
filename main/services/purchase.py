@@ -11,15 +11,17 @@ class PurchaseService:
     def add_to_cart(product_id, buy_count, user):
         try:
             product = Product.objects.get(id=product_id)
-            # print(product)
+
         except Product.DoesNotExist:
             raise ValueError("Sản phẩm không tồn tại")
 
         try:
             purchase = Purchase.objects.get(user=user, product=product, status=-1)
+
             purchase.buy_count += buy_count
             purchase.save()
         except Purchase.DoesNotExist:
+
             purchase = Purchase.objects.create(
                 buy_count=buy_count,
                 price=product.price,

@@ -17,12 +17,14 @@ class PurchaseAPIView(views.APIView):
     def post(self, request):
 
         user = request.user.id
+
         data = request.data
 
         product_id = data.get("product_id")
         buy_count = data.get("buy_count")
 
         purchase = PurchaseService.add_to_cart(product_id, buy_count, user)
+
         serializer = PurchaseSerializer(purchase)
         serialized_purchase = serializer.data
 
