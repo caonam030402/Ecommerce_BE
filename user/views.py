@@ -10,6 +10,7 @@ from rest_framework.permissions import IsAuthenticated
 from user.models import User
 from rest_framework import status
 from user.serializers import UserSerializer
+from datetime import datetime
 
 
 class RegisterView(views.APIView):
@@ -102,6 +103,35 @@ class LogoutView(views.APIView):
 
 class UserView(views.APIView):
     permission_classes = [IsAuthenticated]
+
+    def put(self, request):
+        try:
+            user_id = request.user.id
+
+            user = User.objects.get(id=user_id)
+
+            if "date_of_birth" in request.data:
+                iso_date_str = request.data["date_of_birth"]
+                formatted_date = datetime.strptime(
+                    iso_date_str, "%Y-%m-%dT%H:%M:%S.%fZ"
+                ).strftime("%Y-%m-%d")
+                request.data["date_of_birth"] = formatted_date
+            serializer = UserSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    data={
+                        "message": "Cập nhật thành công",
+                        "data": serializer.data,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                print(serializer.errors)
+                return Response(serializer.errors, status=400)
+        except Exception as e:
+            print(e)
+            return Response({"message": "Internal Server Error"}, status=500)
 
     def get(self, request):
         try:

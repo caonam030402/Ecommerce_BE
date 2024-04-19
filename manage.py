@@ -16,9 +16,6 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    if "runserver" in sys.argv:
-        sys.argv.append("--noreload")  # Disable auto-reload for better performance
-        sys.argv.append("8080")  # Port number to use, in this case, 8080
     execute_from_command_line(sys.argv)
 
 

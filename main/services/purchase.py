@@ -4,6 +4,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from main.models.product import Product
 from main.models.purchase import Purchase
 from main.serializers.purchase import PurchaseSerializer
+from user.models import User
 
 
 class PurchaseService:
@@ -11,7 +12,6 @@ class PurchaseService:
     def add_to_cart(product_id, buy_count, user):
         try:
             product = Product.objects.get(id=product_id)
-
         except Product.DoesNotExist:
             raise ValueError("Sản phẩm không tồn tại")
 
@@ -21,6 +21,11 @@ class PurchaseService:
             purchase.buy_count += buy_count
             purchase.save()
         except Purchase.DoesNotExist:
+            if isinstance(user, int):
+                try:
+                    user = User.objects.get(id=user)
+                except User.DoesNotExist:
+                    raise ValueError("User không tồn tại")
 
             purchase = Purchase.objects.create(
                 buy_count=buy_count,
