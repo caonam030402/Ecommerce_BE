@@ -6,6 +6,7 @@ from main.serializers.product import ProductSerializer
 from rest_framework.response import Response
 from main.services.product import ProductService
 from rest_framework import status
+from utils.helpers import custom_response
 
 
 class CategoryAPIView(views.APIView):
@@ -21,29 +22,23 @@ class CategoryAPIView(views.APIView):
                 status=200,
             )
         except Exception as e:
-            return Response(
-                {
-                    "status": 400,
-                    "message": "Get all categories failed!",
-                    "error": [str(e)],
-                },
-                status=400,
-            )
+            return custom_response("Get all categories failed!", str(e), 400)
 
     def post(self, request):
         try:
             serializer = CategorySerializer(data=request.data, many=True)
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return custom_response(
+                    "Create category successfully!", serializer.data, 201
+                )
             else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return custom_response(
+                    "Create category failed!", serializer.errors, 400
+                )
         except Exception as e:
             print(e)
-            return Response(
-                "Thêm sản phẩm thất bại",
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return custom_response("Create category failed!", str(e), 400)
 
 
 class ProductViewAPI(views.APIView):
@@ -59,9 +54,9 @@ class ProductViewAPI(views.APIView):
                 serializer = ProductSerializer(paginate.object_list, many=True)
                 products_data = serializer.data
 
-                response_data = {
-                    "message": "Lấy sản phẩm thành công",
-                    "data": {
+                return custom_response(
+                    "Lấy sản phẩm thành công",
+                    {
                         "products": products_data,
                         "pagination": {
                             "page": paginate.number,
@@ -69,28 +64,31 @@ class ProductViewAPI(views.APIView):
                             "limit": paginate.paginator.per_page,
                         },
                     },
-                }
-                return Response(response_data, status=200)
+                    200,
+                )
+
             else:
-                return Response("Không có sản phẩm nào phù hợp", status=404)
+                return custom_response(
+                    "Không có sản phẩm nào phù hợp",
+                    None,
+                    404,
+                )
         except Exception as e:
             print(e)
-            return Response("Lấy thất bại", status=500)
+            custom_response("Lỗi", str(e), 500)
 
     def post(self, request):
         try:
             serializer = ProductSerializer(data=request.data, many=True)
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+                return custom_response("Them san pham thanh cong", serializer.data, 201)
             else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return custom_response("Them san pham that bai", serializer.errors, 400)
+
         except Exception as e:
             print(e)
-            return Response(
-                "Thêm sản phẩm thất bại",
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
+            return custom_response("Them san pham that bai", str(e), 500)
 
 
 class ProductDetailViewAPI(views.APIView):
@@ -99,16 +97,11 @@ class ProductDetailViewAPI(views.APIView):
             product = ProductService.get_product_by_id(product_id)
             if product is not None:
                 serializer = ProductSerializer(product)
+                return custom_response("Lấy sản phẩm thành công", serializer.data, 200)
 
-                dataProduct = {
-                    "message": "Lấy sản phẩm thành công",
-                    "data": serializer.data,
-                }
-                return Response(dataProduct, status=status.HTTP_200_OK)
             else:
-                return Response(
-                    "Không tìm thấy sản phẩm", status=status.HTTP_404_NOT_FOUND
-                )
+                return custom_response("Không tìm thấy bạn san pham", None, 404)
+
         except Exception as e:
             print(e)
-            return Response("Lỗi server", status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return custom_response("Lỗi server", str(e), 500)

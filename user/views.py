@@ -11,6 +11,7 @@ from user.models import User
 from rest_framework import status
 from user.serializers import UserSerializer
 from datetime import datetime
+from utils.helpers import custom_response
 
 
 class RegisterView(views.APIView):
@@ -22,21 +23,27 @@ class RegisterView(views.APIView):
 
                 refresh = RefreshToken.for_user(serializer.instance)
 
-                return Response(
+                return custom_response(
+                    "Đăng ký thành công!",
                     {
-                        "message": "Đăng ký thành công!",
-                        "data": {
-                            "user": serializer.data,
-                            "expires": 604800,
-                            "expires_refresh_token": 8640000,
-                            "refresh_token": "Bearer " + str(refresh),
-                            "access_token": "Bearer " + str(refresh.access_token),
-                        },
+                        "user": serializer.data,
+                        "expires": 604800,
+                        "expires_refresh_token": 8640000,
+                        "refresh_token": "Bearer " + str(refresh),
+                        "access_token": "Bearer " + str(refresh.access_token),
                     },
-                    status=201,
+                    200,
                 )
+
             else:
-                return Response(serializer.errors, status=400)
+                return custom_response(
+                    "Lỗi",
+                    {
+                        "email": "Email hoặc user đã tồn tại",
+                    },
+                    422,
+                )
+
         except Exception as e:
             print(e)
             return Response(
@@ -54,27 +61,28 @@ class LoginView(views.APIView):
 
                 refresh = RefreshToken.for_user(user)
                 user_data = UserSerializer(user).data
-                print(user)
-                return Response(
+
+                return custom_response(
+                    "Đăng nhập thành công",
                     {
-                        "message": "Đăng nhập thành công!",
-                        "data": {
-                            "user": user_data,
-                            "expires": 604800,
-                            "expires_refresh_token": 8640000,
-                            "refresh_token": "Bearer " + str(refresh),
-                            "access_token": "Bearer " + str(refresh.access_token),
-                        },
+                        "user": user_data,
+                        "expires": 604800,
+                        "expires_refresh_token": 8640000,
+                        "refresh_token": "Bearer " + str(refresh),
+                        "access_token": "Bearer " + str(refresh.access_token),
                     },
-                    status=200,
+                    200,
                 )
+
             else:
-                return Response(serializer.errors, status=400)
+                data = {
+                    "password": "Email hoặc password không đúng",
+                }
+                return custom_response("Lỗi", data, 422)
+
         except ValidationError as e:
-            return Response(
-                {"message": str(e)},
-                status=400,
-            )
+            print(e)
+
         except Exception as e:
             print(e)
             return Response(

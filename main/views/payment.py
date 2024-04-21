@@ -7,6 +7,7 @@ import datetime
 import urllib.parse
 import hashlib
 from django.conf import settings
+from utils.helpers import custom_response
 
 
 class PaymentAPIView(views.APIView):
@@ -57,7 +58,11 @@ class PaymentAPIView(views.APIView):
         vnp_params["vnp_SecureHash"] = signed
         vnp_url += "?" + urllib.parse.urlencode(vnp_params)
 
-        return Response({"message": "Lấy URL thành công", "data": vnp_url})
+        return custom_response(
+            "Lấy URL thành công!",
+            vnp_url,
+            200,
+        )
 
     def get(self, request):
         hash_secret = settings.VNP_HASH_SECRET

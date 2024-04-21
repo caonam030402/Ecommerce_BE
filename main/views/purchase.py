@@ -4,11 +4,10 @@ from rest_framework.response import Response
 from main.models.purchase import Purchase
 from rest_framework import status
 from rest_framework import views
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from main.serializers.purchase import PurchaseSerializer
-from main.models.promotion import Promotion
 from django.http import JsonResponse
+from utils.helpers import custom_response
 
 
 class PurchaseAPIView(views.APIView):
@@ -28,13 +27,7 @@ class PurchaseAPIView(views.APIView):
         serializer = PurchaseSerializer(purchase)
         serialized_purchase = serializer.data
 
-        return Response(
-            data={
-                "message": "Thêm vào giỏ hàng thành công",
-                "data": serialized_purchase,
-            },
-            status=status.HTTP_200_OK,
-        )
+        return custom_response("Thêm vào giỏ hàng thành công", serialized_purchase, 200)
 
     def get(self, request):
         status = request.GET.get("status")
@@ -46,26 +39,16 @@ class PurchaseAPIView(views.APIView):
             int(status), request.user.id
         )
 
-        print(purchase_list)
-
         serializer = PurchaseSerializer(purchase_list, many=True)
 
-        return Response(
-            data={
-                "message": "Lấy đơn hàng thành công",
-                "data": serializer.data,
-            },
-            status=200,
-        )
+        return custom_response("Lấy đơn hàng thành công", serializer.data, 200)
 
     @csrf_exempt
     def delete(self, request):
         purchase_ids = request.data.getlist("ids[]")
         deleted_count = Purchase.objects.filter(id__in=purchase_ids).delete()
-        return Response(
-            f"Xóa {deleted_count} đơn thành công",
-            data={"delete_count": deleted_count},
-            status=status.HTTP_200_OK,
+        return custom_response(
+            f"Xóa {deleted_count} đơn thành công", {"delete_count": deleted_count}, 200
         )
 
     def put(self, request):
@@ -83,15 +66,10 @@ class PurchaseAPIView(views.APIView):
             serializer = PurchaseSerializer(purchase)
             serialized_purchase = serializer.data
 
-            return Response(
-                data={
-                    "message": "Mua thành công",
-                    "data": serialized_purchase,
-                },
-                status=status.HTTP_200_OK,
-            )
+            return custom_response("Mua thành công", serialized_purchase, 200)
+
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            return custom_response("error", str(e), 500)
 
     @csrf_exempt
     def patch(self, request):
@@ -103,5 +81,4 @@ class PurchaseAPIView(views.APIView):
             if key not in ["product_id", "purchase_id"]
         }
         purchase = PurchaseService.update_purchase(product_id, update_body, purchase_id)
-        print(purchase)
-        return Response("Cập nhập đơn hàng thành công", status=status.HTTP_200_OK)
+        return custom_response("Cập nhật đơn hàng thành công", purchase, 200)
