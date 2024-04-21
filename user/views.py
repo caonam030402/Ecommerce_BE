@@ -51,15 +51,15 @@ class LoginView(views.APIView):
             serializer = LoginSerializer(data=request.data)
             if serializer.is_valid():
                 user = serializer.validated_data.get("user")
+
                 refresh = RefreshToken.for_user(user)
+                user_data = UserSerializer(user).data
+                print(user)
                 return Response(
                     {
                         "message": "Đăng nhập thành công!",
                         "data": {
-                            "user": {
-                                "email": user.email,
-                                "name": user.name,
-                            },
+                            "user": user_data,
                             "expires": 604800,
                             "expires_refresh_token": 8640000,
                             "refresh_token": "Bearer " + str(refresh),
@@ -84,14 +84,14 @@ class LoginView(views.APIView):
 
 
 class LogoutView(views.APIView):
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         try:
-            refresh_token = request.data.get("refresh_token")
-            if not refresh_token:
-                return Response({"message": "Missing refresh token"}, status=400)
+            user = request.user.id
 
-            token = RefreshToken(refresh_token)
-            token.blacklist()
+            if not user:
+                return Response({"message": "Missing refresh token"}, status=400)
 
             logout(request)
 
@@ -116,7 +116,9 @@ class UserView(views.APIView):
                     iso_date_str, "%Y-%m-%dT%H:%M:%S.%fZ"
                 ).strftime("%Y-%m-%d")
                 request.data["date_of_birth"] = formatted_date
+
             serializer = UserSerializer(user, data=request.data, partial=True)
+
             if serializer.is_valid():
                 serializer.save()
                 return Response(

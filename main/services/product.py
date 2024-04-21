@@ -11,36 +11,49 @@ class ProductService:
             page = int(request.GET.get("page", 1))
             limit = int(request.GET.get("limit", 20))
 
-            category = query_params.get("category")
-            rating_filter = query_params.get("rating_filter")
-            name = query_params.get("name", "")
-            price_max = query_params.get("price_max")
-            price_min = query_params.get("price_min")
+            category = request.GET.get("category")
+            rating_filter = request.GET.get("rating_filter")
+            name = request.GET.get("name", "")
+            price_max = request.GET.get("price_max")
+            price_min = request.GET.get("price_min")
 
-            sort_query = {}
-            if sort_by in ["view", "sold", "price"]:
-                sort_query[sort_by] = 1 if order == "desc" else -1
-            # else:
-            #     sort_query["createdAt"] = "asc" if order == "asc" else "-asc"
+            products = Product.objects.all()
 
-            query = {}
             if category:
-                query["category"] = category
+                products = products.filter(category=category)
             if rating_filter:
-                query["rating__gte"] = int(rating_filter)
+                products = products.filter(rating__gte=rating_filter)
             if name:
-                query["name__icontains"] = name
-            if price_max is not None and price_min is not None:
-                query["price__range"] = (
-                    int(price_min),
-                    int(price_max),
-                )
-            elif price_max is not None:
-                query["price__lte"] = int(price_max)
-            elif price_min is not None:
-                query["price__gte"] = int(price_min)
+                products = products.filter(name__icontains=name)
+            if price_max:
+                products = products.filter(price__lte=price_max)
+            if price_min:
+                products = products.filter(price__gte=price_min)
 
-            products = Product.objects.filter(**query).order_by(**sort_query)
+            if sort_by == "view":
+                products = (
+                    products.order_by("-view")
+                    if order == "desc"
+                    else products.order_by("view")
+                )
+            elif sort_by == "sold":
+                products = (
+                    products.order_by("-sold")
+                    if order == "desc"
+                    else products.order_by("sold")
+                )
+            elif sort_by == "price":
+                products = (
+                    products.order_by("-price")
+                    if order == "desc"
+                    else products.order_by("price")
+                )
+            else:
+                products = (
+                    products.order_by("-created_at")
+                    if order == "desc"
+                    else products.order_by("created_at")
+                )
 
             paginator = Paginator(products, limit)
             paginated_products = paginator.page(page)

@@ -73,6 +73,7 @@ class PurchaseAPIView(views.APIView):
             purchase_ids = [
                 purchase_data["purchase_id"] for purchase_data in request.data
             ]
+
             purchases = Purchase.objects.filter(pk__in=purchase_ids)
 
             for purchase in purchases:
@@ -102,13 +103,5 @@ class PurchaseAPIView(views.APIView):
             if key not in ["product_id", "purchase_id"]
         }
         purchase = PurchaseService.update_purchase(product_id, update_body, purchase_id)
-        return Response(
-            "Cập nhập đơn hàng thành công", data=purchase, status=status.HTTP_200_OK
-        )
-
-    # @csrf_exempt
-    # def get(self, request, status):
-    #     purchases = PurchaseService.get_purchases_with_status(int(status), None)
-    #     return Response(
-    #         "Lấy đơn mua thành công", data=purchases, status=status.HTTP_200_OK
-    #     )
+        print(purchase)
+        return Response("Cập nhập đơn hàng thành công", status=status.HTTP_200_OK)

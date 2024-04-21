@@ -13,7 +13,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from .env file
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,6 +74,7 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 
+
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
@@ -82,6 +87,12 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
+
+# Get environment variables
+VNP_TMN_CODE = os.getenv("vnp_TmnCode")
+VNP_HASH_SECRET = os.getenv("vnp_HashSecret")
+VNP_URL = os.getenv("vnp_Url")
+VNP_RETURN_URL = os.getenv("vnp_ReturnUrl")
 
 ROOT_URLCONF = "ecommerce.urls"
 
